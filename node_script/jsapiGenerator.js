@@ -4,7 +4,7 @@
     const shasum = require('shasum');
 function runGen() {
 
-    if (process.argv.length !== 7) {
+    if (process.argv.length !== 8) {
         console.log(`Usage: node ${process.argv[1]} <define json> <generate dir>`);
         throw new Error("Param error!");;
     }
@@ -13,6 +13,7 @@ function runGen() {
     const jsapiBeanDir = process.argv[4];
     const packageName = process.argv[5];
     const rootPath = process.argv[6];
+    const defineString = process.argv[7];
 
     //const scriptsPath = "./src/main/scripts/jsapi"
     //const definePath=scriptsPath + "/define/JSAPIDefine.json";
@@ -20,11 +21,11 @@ function runGen() {
 
     const requestBeanDir = jsapiBeanDir+packageName+"/request";
     const responseBeanDir = jsapiBeanDir+packageName+"/response";
-    const managerDir = jsapiBeanDir+packageName+"/manager";
+    const managerDir = `${rootPath}/src/main/api${packageName}/manager`;
     const jsapiDir = jsapiGenerateDir+packageName+"/jsapi";
     const prefix = 'JSApi';
 
-    const newHash = shasum(fs.readFileSync(jsonPath));
+    const newHash = shasum(defineString);
 
     const oldHash = fs.readFileSync(defineHashPath).toString();
 
@@ -41,7 +42,7 @@ function runGen() {
         return;
     }
 
-    const defines = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+    const defines = JSON.parse(defineString);
 
     const camelCaseString = (string) => {
         return string.split('_').map(part => {
@@ -160,7 +161,6 @@ function runGen() {
         const requestImplContent = ejs.render(implTemplate.toString(), requestRenderInfo);
         const responseImplContent = ejs.render(implTemplate.toString(), responseRenderInfo);
         const jsapiImplContent = ejs.render(jsapiimplTemplate.toString(), jsapiInfo);
-
         mkdirsSync(`${requestBeanDir}`);
         fs.writeFileSync(`${requestBeanDir}/${className}Request.java`, requestImplContent);
 
@@ -185,7 +185,8 @@ function runGen() {
         package: packageName.substring(1).replace(/\//g,".")
     };
 
-    const jsManagerImplTemplate = fs.readFileSync(`./template/jsManager.template`);
+    const jsManagerImplTemplate = fs.readFileSync(`${rootPath}/src/main/scripts/jsapi/template/jsManager.template`);
+
     const jsapiImplContent = ejs.render(jsManagerImplTemplate.toString(), jsManagerInfo);
 
     mkdirsSync(`${managerDir}`);
